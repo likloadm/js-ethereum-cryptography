@@ -1,1 +1,1 @@
-export { HARDENED_OFFSET, HDKey } from "@scure/bip32";
+export { HARDENED_OFFSET, HDKey } from "bip32";
