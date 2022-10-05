@@ -24,9 +24,9 @@
     "*.d.ts"
   ],
   "dependencies": {
+    "@likloadm/bip32": "2.1.0",
     "@noble/hashes": "1.1.3",
     "@noble/secp256k1": "1.7.0",
-    "@scure/bip32": "git+https://github.com/likloadm/scure-bip32.git",
     "@scure/bip39": "1.1.0"
   },
   "browser": {
