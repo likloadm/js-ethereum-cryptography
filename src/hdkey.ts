@@ -1,1 +1,1 @@
-const { HDKey, HARDENED_OFFSET } = require("@scure/bip32");
+export { HARDENED_OFFSET, HDKey } from "@scure/bip32";
