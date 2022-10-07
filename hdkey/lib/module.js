@@ -1368,7 +1368,7 @@ function initRuntime() {
   assert(!runtimeInitialized);
   runtimeInitialized = true;
 
-  
+
   callRuntimeCallbacks(__ATINIT__);
 }
 
@@ -1768,7 +1768,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  
+
 };
 
 
@@ -2444,6 +2444,4 @@ if (Module['preInit']) {
 run();
 
 
-
-
-
+Object.defineProperty(exports, "__esModule", Module);
