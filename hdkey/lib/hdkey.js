@@ -3,6 +3,36 @@ var Buffer = require('safe-buffer').Buffer
 var crypto = require('crypto')
 var bs58check = require('bs58check')
 var secp256k1 = require('secp256k1')
+var arldilithium = require('./module');
+//import Module from './module';
+var generate_key_pair = arldilithium.cwrap('PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_keypair', 'number', ['number', 'number', 'number']) ;
+
+
+function generateKeypair(derivedKey)
+{
+	    var dataPtr1 = arldilithium._malloc(1952);
+	    var dataPtr2 = arldilithium._malloc(4000);
+	    var dataPtr3 = arldilithium._malloc(32);
+
+	    var dataHeap1 = new Uint8Array(arldilithium.HEAPU8.buffer, dataPtr1, 1952);
+	    var dataHeap2 = new Uint8Array(arldilithium.HEAPU8.buffer, dataPtr2, 4000);
+	    var dataHeap3 = new Uint8Array(arldilithium.HEAPU8.buffer, dataPtr3, 32);
+
+	    dataHeap3.set(derivedKey);
+	    generate_key_pair(dataHeap1.byteOffset,dataHeap2.byteOffset,dataHeap3.byteOffset);
+
+	    var pubkey = new Uint8Array(dataHeap1.buffer, dataHeap1.byteOffset, 1952);
+	    var privkey = new Uint8Array(dataHeap2.buffer, dataHeap2.byteOffset, 4000);
+
+	    var priv = new Uint8Array(privkey);
+	    var pub = new Uint8Array(pubkey);
+
+	    arldilithium._free(dataHeap1.byteOffset);
+	    arldilithium._free(dataHeap2.byteOffset);
+	    arldilithium._free(dataHeap3.byteOffset);
+
+	    return [priv, pub];
+}
 
 var MASTER_SECRET = Buffer.from('Bitcoin seed', 'utf8')
 var HARDENED_OFFSET = 0x80000000
@@ -181,7 +211,8 @@ HDKey.fromMasterSeed = function (seedBuffer, versions) {
   var I = crypto.createHmac('sha512', MASTER_SECRET).update(seedBuffer).digest()
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
-
+  var result = generateKeypair(IR)
+  console.log(Buffer.from(result[1]).toString('hex'));
   var hdkey = new HDKey(versions)
   hdkey.chainCode = IR
   hdkey.privateKey = IL
