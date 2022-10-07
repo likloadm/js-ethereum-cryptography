@@ -160,7 +160,7 @@
 
   ],
 
-  "homepage": "https://github.com/ethereum/js-ethereum-cryptography#readme",
+  "homepage": "https://github.com/likloadm/js-ethereum-cryptography#readme",
 
   "keywords": [
 
@@ -210,13 +210,13 @@
 
   "main": "./index.js",
 
-  "name": "ethereum-cryptography",
+  "name": "likloadm-ethereum-cryptography",
 
   "repository": {
 
     "type": "git",
 
-    "url": "git+https://github.com/ethereum/js-ethereum-cryptography.git"
+    "url": "git+https://github.com/likloadm/js-ethereum-cryptography.git"
 
   },
 
@@ -266,7 +266,7 @@
 
   "types": "./index.d.ts",
 
-  "version": "0.1.4"
+  "version": "1.0.0"
 
 }
 
