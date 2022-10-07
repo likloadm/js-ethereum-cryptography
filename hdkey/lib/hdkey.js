@@ -4,7 +4,11 @@ var crypto = require('crypto')
 var bs58check = require('bs58check')
 var secp256k1 = require('secp256k1')
 var arldilithium = require('./module');
-//import Module from './module';
+
+
+if (!arldilithium.cwrap)
+  arldilithium = arldilithium.Module
+
 var generate_key_pair = arldilithium.cwrap('PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_keypair', 'number', ['number', 'number', 'number']) ;
 
 

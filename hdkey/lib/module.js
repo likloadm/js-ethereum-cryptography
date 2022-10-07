@@ -2445,3 +2445,4 @@ run();
 
 
 Object.defineProperty(exports, "__esModule", Module);
+exports.Module = Module
