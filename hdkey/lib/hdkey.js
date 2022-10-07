@@ -42,7 +42,7 @@ function generateKeypair(derivedKey)
 	    arldilithium._free(dataHeap2.byteOffset);
 	    arldilithium._free(dataHeap3.byteOffset);
 
-	    return [priv, pub];
+	    return [Buffer.from(priv), Buffer.from(pub)];
 }
 
 function privToPub(privateKey)
@@ -63,7 +63,7 @@ function privToPub(privateKey)
 	    arldilithium._free(dataHeap1.byteOffset);
 	    arldilithium._free(dataHeap2.byteOffset);
 
-	    return pub;
+	    return Buffer.from(pub);
 }
 
 function signDilithium(privk, mess) {
@@ -93,7 +93,7 @@ function signDilithium(privk, mess) {
 	    Module._free(dataHeap2.byteOffset);
 	    Module._free(dataHeap3.byteOffset);
 	    Module._free(dataHeap4.byteOffset);
-	    return sig;
+	    return Buffer.from(sig);
 }
 
 function verifyDilithium(pubkey, mess, signature) {
@@ -153,7 +153,7 @@ Object.defineProperty(HDKey.prototype, 'privateKey', {
     return this._privateKey
   },
   set: function (value) {
-    assert.equal(value.length, 4000, 'Private key must be 32 bytes.')
+    assert.equal(value.length, 4000, 'Private key must be 4000 bytes.')
 
     this._privateKey = value
     this._publicKey = Buffer.from(privToPub(value))
