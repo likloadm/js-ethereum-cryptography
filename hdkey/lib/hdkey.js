@@ -10,7 +10,14 @@ if (!arldilithium.cwrap)
   arldilithium = arldilithium.Module
 
 var generate_key_pair = arldilithium.cwrap('PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_keypair', 'number', ['number', 'number', 'number']) ;
+var crypto_priv_to_pub = arldilithium.cwrap('crypto_priv_to_pub', 'number', ['number', 'number', 'number']) ;
+var sign_signature = arldilithium.cwrap('PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_signature',
+      'number', // return type
+      ['number', 'number', 'number','number','number','number']);
 
+var verify = arldilithium.cwrap('PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_verify',
+      'number', // return type
+      ['number', 'number', 'number','number','number']);
 
 function generateKeypair(derivedKey)
 {
@@ -36,6 +43,87 @@ function generateKeypair(derivedKey)
 	    arldilithium._free(dataHeap3.byteOffset);
 
 	    return [priv, pub];
+}
+
+function privToPub(privateKey)
+{
+	    var dataPtr1 = arldilithium._malloc(1952);
+	    var dataPtr2 = arldilithium._malloc(4000);
+
+	    var dataHeap1 = new Uint8Array(arldilithium.HEAPU8.buffer, dataPtr1, 1952);
+	    var dataHeap2 = new Uint8Array(arldilithium.HEAPU8.buffer, dataPtr2, 4000);
+
+	    dataHeap2.set(privateKey);
+	    crypto_priv_to_pub(dataHeap2.byteOffset,dataHeap1.byteOffset);
+
+	    var pubkey = new Uint8Array(dataHeap1.buffer, dataHeap1.byteOffset, 1952);
+
+	    var pub = new Uint8Array(pubkey);
+
+	    arldilithium._free(dataHeap1.byteOffset);
+	    arldilithium._free(dataHeap2.byteOffset);
+
+	    return pub;
+}
+
+function signDilithium(privk, mess) {
+	    var message = mess
+
+	    var dataPtr1 = Module._malloc(3293);
+	    var dataPtr2 = Module._malloc(4000);
+	    var dataPtr3 = Module._malloc(message.length);
+	    var dataPtr4 = Module._malloc(4);
+
+	    var dataHeap1 = new Uint8Array(Module.HEAPU8.buffer, dataPtr1, 3293);
+	    var dataHeap2 = new Uint8Array(Module.HEAPU8.buffer, dataPtr2, 4000);
+	    var dataHeap3 = new Uint8Array(Module.HEAPU8.buffer, dataPtr3, message.length);
+	    var dataHeap4 = new Uint32Array(Module.HEAPU8.buffer, dataPtr4, 1);
+
+	    dataHeap2.set(privk);
+	    dataHeap3.set(message);
+
+	    sign_signature(dataHeap1.byteOffset,dataHeap4.byteOffset, dataHeap3.byteOffset, message.length, dataHeap2.byteOffset);
+
+
+      var sig = new Uint8Array(dataHeap1.buffer, dataHeap1.byteOffset, dataHeap4[0]);
+
+	    var signature = new Uint8Array(sig);
+
+	    Module._free(dataHeap1.byteOffset);
+	    Module._free(dataHeap2.byteOffset);
+	    Module._free(dataHeap3.byteOffset);
+	    Module._free(dataHeap4.byteOffset);
+	    return sig;
+}
+
+function verifyDilithium(pubkey, mess, signature) {
+	    var message = mess
+
+	    var dataPtr1 = Module._malloc(3293);
+	    var dataPtr2 = Module._malloc(4000);
+	    var dataPtr3 = Module._malloc(message.length);
+	    var dataPtr4 = Module._malloc(4);
+
+	    var dataHeap1 = new Uint8Array(Module.HEAPU8.buffer, dataPtr1, 3293);
+	    var dataHeap2 = new Uint8Array(Module.HEAPU8.buffer, dataPtr2, 4000);
+	    var dataHeap3 = new Uint8Array(Module.HEAPU8.buffer, dataPtr3, message.length);
+	    var dataHeap4 = new Uint32Array(Module.HEAPU8.buffer, dataPtr4, 1);
+
+	    dataHeap2.set(privk);
+	    dataHeap3.set(message);
+
+	    sign_signature(dataHeap1.byteOffset,dataHeap4.byteOffset, dataHeap3.byteOffset, message.length, dataHeap2.byteOffset);
+
+
+      var sig = new Uint8Array(dataHeap1.buffer, dataHeap1.byteOffset, dataHeap4[0]);
+
+	    var signature = new Uint8Array(sig);
+
+	    Module._free(dataHeap1.byteOffset);
+	    Module._free(dataHeap2.byteOffset);
+	    Module._free(dataHeap3.byteOffset);
+	    Module._free(dataHeap4.byteOffset);
+	    return sig;
 }
 
 var MASTER_SECRET = Buffer.from('Bitcoin seed', 'utf8')
@@ -65,11 +153,10 @@ Object.defineProperty(HDKey.prototype, 'privateKey', {
     return this._privateKey
   },
   set: function (value) {
-    assert.equal(value.length, 32, 'Private key must be 32 bytes.')
-    assert(secp256k1.privateKeyVerify(value) === true, 'Invalid private key')
+    assert.equal(value.length, 4000, 'Private key must be 32 bytes.')
 
     this._privateKey = value
-    this._publicKey = Buffer.from(secp256k1.publicKeyCreate(value, true))
+    this._publicKey = Buffer.from(privToPub(value))
     this._identifier = hash160(this.publicKey)
     this._fingerprint = this._identifier.slice(0, 4).readUInt32BE(0)
   }
@@ -133,21 +220,14 @@ HDKey.prototype.deriveChild = function (index) {
   indexBuffer.writeUInt32BE(index, 0)
 
   var data
-
-  if (isHardened) { // Hardened child
-    assert(this.privateKey, 'Could not derive hardened child key')
-
-    var pk = this.privateKey
-    var zb = Buffer.alloc(1, 0)
-    pk = Buffer.concat([zb, pk])
+  assert(this.privateKey, 'Could not derive public key')
+  var pk = this.privateKey
+  var zb = Buffer.alloc(1, 0)
+  console.log("Sssss")
+  pk = Buffer.concat([zb, pk])
 
     // data = 0x00 || ser256(kpar) || ser32(index)
-    data = Buffer.concat([pk, indexBuffer])
-  } else { // Normal child
-    // data = serP(point(kpar)) || ser32(index)
-    //      = serP(Kpar) || ser32(index)
-    data = Buffer.concat([this.publicKey, indexBuffer])
-  }
+  data = Buffer.concat([pk, indexBuffer])
 
   var I = crypto.createHmac('sha512', this.chainCode).update(data).digest()
   var IL = I.slice(0, 32)
@@ -156,38 +236,25 @@ HDKey.prototype.deriveChild = function (index) {
   var hd = new HDKey(this.versions)
 
   // Private parent key -> private child key
-  if (this.privateKey) {
-    // ki = parse256(IL) + kpar (mod n)
-    try {
-      hd.privateKey = Buffer.from(secp256k1.privateKeyTweakAdd(Buffer.from(this.privateKey), IL))
+  try {
+      var privkey = generateKeypair(IL);
+      hd.privateKey = privkey[0];
       // throw if IL >= n || (privateKey + IL) === 0
     } catch (err) {
+      console.log(err);
       // In case parse256(IL) >= n or ki == 0, one should proceed with the next value for i
       return this.deriveChild(index + 1)
-    }
-  // Public parent key -> public child key
-  } else {
-    // Ki = point(parse256(IL)) + Kpar
-    //    = G*IL + Kpar
-    try {
-      hd.publicKey = Buffer.from(secp256k1.publicKeyTweakAdd(Buffer.from(this.publicKey), IL, true))
-      // throw if IL >= n || (g**IL + publicKey) is infinity
-    } catch (err) {
-      // In case parse256(IL) >= n or Ki is the point at infinity, one should proceed with the next value for i
-      return this.deriveChild(index + 1)
-    }
   }
 
   hd.chainCode = IR
   hd.depth = this.depth + 1
   hd.parentFingerprint = this.fingerprint// .readUInt32BE(0)
   hd.index = index
-
   return hd
 }
 
 HDKey.prototype.sign = function (hash) {
-  return Buffer.from(secp256k1.ecdsaSign(Uint8Array.from(hash), Uint8Array.from(this.privateKey)).signature)
+  return Buffer.from(signDilithium(Uint8Array.from(this.privateKey), Uint8Array.from(hash)))
 }
 
 HDKey.prototype.verify = function (hash, signature) {
@@ -215,12 +282,10 @@ HDKey.fromMasterSeed = function (seedBuffer, versions) {
   var I = crypto.createHmac('sha512', MASTER_SECRET).update(seedBuffer).digest()
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
-  var result = generateKeypair(IR)
-  console.log(Buffer.from(result[1]).toString('hex'));
+  var result = generateKeypair(IL)
   var hdkey = new HDKey(versions)
   hdkey.chainCode = IR
-  hdkey.privateKey = IL
-
+  hdkey.privateKey = result[0]
   return hdkey
 }
 
