@@ -223,7 +223,6 @@ HDKey.prototype.deriveChild = function (index) {
   assert(this.privateKey, 'Could not derive public key')
   var pk = this.privateKey
   var zb = Buffer.alloc(1, 0)
-  console.log("Sssss")
   pk = Buffer.concat([zb, pk])
 
     // data = 0x00 || ser256(kpar) || ser32(index)
@@ -287,6 +286,10 @@ HDKey.fromMasterSeed = function (seedBuffer, versions) {
   hdkey.chainCode = IR
   hdkey.privateKey = result[0]
   return hdkey
+}
+
+HDKey.privToPub = function (privateKey) {
+  return Buffer.from(privToPub(privateKey))
 }
 
 HDKey.fromExtendedKey = function (base58key, versions) {
