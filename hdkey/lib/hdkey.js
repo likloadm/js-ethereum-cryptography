@@ -340,7 +340,7 @@ function serialize (hdkey, version, key) {
   return buffer
 }
 HDKey.hash160 = function (privateKey) {
-  var sha = crypto.createHash('sha256').update(buf).digest()
+  var sha = crypto.createHash('sha256').update(privateKey).digest()
   return crypto.createHash('ripemd160').update(sha).digest()
 }
 
