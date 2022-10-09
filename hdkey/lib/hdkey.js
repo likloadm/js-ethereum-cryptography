@@ -156,7 +156,7 @@ Object.defineProperty(HDKey.prototype, 'privateKey', {
     assert.equal(value.length, 4000, 'Private key must be 4000 bytes.')
 
     this._privateKey = value
-    this._publicKey = Buffer.from(privToPub(value))
+    this._publicKey = privToPub(value);
     this._identifier = hash160(this.publicKey)
     this._fingerprint = this._identifier.slice(0, 4).readUInt32BE(0)
   }
@@ -289,7 +289,7 @@ HDKey.fromMasterSeed = function (seedBuffer, versions) {
 }
 
 HDKey.privToPub = function (privateKey) {
-  return Buffer.from(privToPub(privateKey))
+  return Buffer.concat([Buffer.from('07', 'hex'), privToPub(privateKey)]);
 }
 
 HDKey.fromExtendedKey = function (base58key, versions) {
@@ -338,6 +338,10 @@ function serialize (hdkey, version, key) {
   key.copy(buffer, 45)
 
   return buffer
+}
+HDKey.hash160 = function (privateKey) {
+  var sha = crypto.createHash('sha256').update(buf).digest()
+  return crypto.createHash('ripemd160').update(sha).digest()
 }
 
 function hash160 (buf) {

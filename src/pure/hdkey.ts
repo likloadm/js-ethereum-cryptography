@@ -6,6 +6,8 @@ export interface Versions {
 export declare class HDKeyT {
   public static HARDENED_OFFSET: number;
   public static fromMasterSeed(seed: Buffer, versions?: Versions): HDKeyT;
+  public static privToPub(privateKey: Buffer): Buffer;
+  public static hash160(buf: Buffer): Buffer;
   public static fromExtendedKey(base58key: string, versions?: Versions): HDKeyT;
   public static fromJSON(json: { xpriv: string }): HDKeyT;
 
